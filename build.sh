@@ -4,7 +4,7 @@ mkdir build
 cd build
 cmake .. -G "Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake  -DCMAKE_POLICY_DEFAULT_CMP0091=NEW -DCMAKE_BUILD_TYPE=Release
 cmake --build .
-chmod +x my_boost_pool_alloc
+chmod +x otus_cpp_8
 # chmod +x 02_logging_allocator
 # chmod +x 01_std_03_allocator
 # chmod +x 00_new_overload

@@ -1,22 +1,15 @@
-cmake_minimum_required(VERSION 4.1)
+cmake_minimum_required(VERSION 3.28.3)
 
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VESRION 0.0.${PATCH_VERSION})
 
 project(otus_cpp_8 VERSION ${PROJECT_VESRION})
 ## Указываем, что требуется библиотека Boost
-#find_package(Boost 1.89.0 REQUIRED)
-##Подключаем директивы для использования Boost
-#include_directories(${Boost_INCLUDE_DIR})
-
-set(Boost_INCLUDE_DIR F:/work/otus_cpp/vcpkg/installed/x64-windows/include
-        F:/work/otus_cpp/vcpkg/installed/x64-mingw-dynamic/include)
-#set(Boost_INCLUDE_DIR F:/work/otus_cpp/vcpkg/packages/boost-program-options_x64-mingw-dynamic/include
-#        F:/work/otus_cpp/vcpkg/packages/boost-crc_x64-windows/include
-#F:/work/otus_cpp/vcpkg/packages/boost-config_x64-mingw-dynamic/include)
-#set(Boost_LIBRARY_DIR F:/work/otus_cpp/vcpkg/packages/boost-program-options_x64-mingw-dynamic/lib)
-#find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(Boost 1.89.0 REQUIRED)
+# set(Boost_INCLUDE_DIR F:/work/otus_cpp/vcpkg/installed/x64-windows/include F:/work/otus_cpp/vcpkg/installed/x64-mingw-dynamic/include)
+##Подключаем директивы для использования Boost
+include_directories(${Boost_INCLUDE_DIR})
+
 include_directories(${Boost_INCLUDE_DIR})
 
 set(CMAKE_CXX_STANDARD 20)
