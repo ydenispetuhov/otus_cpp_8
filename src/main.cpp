@@ -2,6 +2,7 @@
 #include "duplicate_finder.h"
 #include "hash/crc32.h"
 #include "hash/crc16.h"
+#include <cstdlib>
 
 #include <boost/program_options.hpp>
 
@@ -65,14 +66,14 @@ int main(int argc, char* argv[]) try
     {
         std::cerr << "Error while parsing command-line arguments: "
                   << error.what() << "\nPlease use --help to see help message\n";
-        return 1;
+        std::exit(EXIT_FAILURE);
     }
 
     std::size_t block_size = var_map["size"].as<std::size_t>();
     if (block_size == 0)
     {
         std::cerr << "Block size must be at least 1\n";
-        return 1;
+        std::exit(EXIT_FAILURE);
     }
     std::size_t min_file_size = var_map["min_file_size"].as<std::size_t>();
 
@@ -113,9 +114,11 @@ int main(int argc, char* argv[]) try
         job<my::Crc16>(block_size, &filesystem_traverser);
     else
         throw std::invalid_argument(std::string("Incorrect hash algorithm ") + hash_algo + ". Use --help options for more details");
+
+    std::exit(EXIT_SUCCESS);
 }
 catch (const std::exception& e)
 {
     std::cerr << e.what() << '\n';
-    return 1;
+    std::exit(EXIT_FAILURE);
 }
