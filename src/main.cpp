@@ -9,6 +9,9 @@
 #include <iostream>
 #include <filesystem>
 #include <regex>
+#include <string>
+#include <vector>
+#include <stdexcept>
 
 #include "filesystem_travercer.h"
 
@@ -29,38 +32,84 @@ void job(std::size_t block_size, my::IFilesystemTraverser& filesystem_traverser)
     }
 }
 
-int main(int argc, char* argv[]) try
-{
-    namespace po = boost::program_options;
-    po::options_description opt_desc("Allowed options");
-    bool recursive = false;
-    bool case_sensitive = false;
-    opt_desc.add_options()
-        ("help",                                                                            "Print this message")
-        ("size",           po::value<std::size_t>()->required()->default_value(4096),       "Block size (in bytes) used to compare files (at least 1)")
-        ("hash",           po::value<std::string>()->required()->default_value("crc32"),    "Hash algorithm used to compare byte blocks, one of 'crc32', 'crc16'")
-        ("min_file_size",  po::value<std::size_t>()->required()->default_value(1),          "Minimum file size to compare")
-        ("root_dir",       po::value<std::vector<std::string>>()->required()->multitoken(), "Directories to search duplicates into")
-        ("exclude_dir",    po::value<std::vector<std::string>>()->multitoken(),             "Direcroties to exclude from search")
-        ("mask_include",   po::value<std::vector<std::string>>()->multitoken(),             "Include only files corresponding to these masks in search")
-        ("mask_exclude",   po::value<std::vector<std::string>>()->multitoken(),             "Exclude files corresponding to these masks from search")
-        ("recursive",      po::bool_switch(&recursive),                                     "Use this option to enable recursive subdirectory scanning")
-        ("case_sensitive", po::bool_switch(&case_sensitive),                                "Use this option to make file masks case sensitive")
-    ;
+int main(int argc, char* argv[]) try {
+    // Parse command line options
+    my::ProgramOptions options = my::parse_command_line(argc, argv);
+    
+    // If help was requested, we've already printed it and exited
+    if (options.show_help) {
+        return 0;
+    }
+    
+    // Validate options
+    my::validate_options(options);
+    
+    // Create filesystem traverser
+    auto filesystem_traverser = my::create_filesystem_traverser(options);
+    
+    // Run duplicate finding based on hash algorithm
+    if (options.hash_algorithm == "crc32") {
+        my::find_and_print_duplicates<my::Crc32>(options.block_size, filesystem_traverser.get());
+    } else if (options.hash_algorithm == "crc16") {
+        my::find_and_print_duplicates<my::Crc16>(options.block_size, filesystem_traverser.get());
+    } else {
+        throw std::invalid_argument("Incorrect hash algorithm: " + options.hash_algorithm + 
+                                   ". Supported algorithms are 'crc32' and 'crc16'.");
+    }
+    
+    return 0;
+} catch (const std::exception& e) {
+    std::cerr << "Error: " << e.what() << '\n';
+    return 1;
+} catch (...) {
+    std::cerr << "Unknown error occurred\n";
+    return 1;
+}
 
-    po::variables_map var_map;
-    try
-    {
-        auto parsed = po::command_line_parser(argc, argv)
-            .options(opt_desc)
-            .run();
-        po::store(parsed, var_map);
-        if (var_map.count("help") != 0)
-        {
-            std::cout << opt_desc << "\n";
-            return 0;
+namespace my {
+    ProgramOptions parse_command_line(int argc, char* argv[]) {
+        po::options_description desc("Allowed options");
+        ProgramOptions options;
+        
+        // Define command line options
+        desc.add_options()
+            ("help", "Print this help message")
+            ("size", po::value<std::size_t>(&options.block_size)->default_value(4096),
+             "Block size (in bytes) used to compare files (minimum 1)")
+            ("hash", po::value<std::string>(&options.hash_algorithm)->default_value("crc32"),
+             "Hash algorithm used to compare byte blocks ('crc32' or 'crc16')")
+            ("min_file_size", po::value<std::size_t>(&options.min_file_size)->default_value(1),
+             "Minimum file size to compare (in bytes)")
+            ("root_dir", po::value<std::vector<std::string>>(&options.root_directories)->required()->multitoken(),
+             "Directories to search for duplicates")
+            ("exclude_dir", po::value<std::vector<std::string>>(&options.exclude_directories)->multitoken(),
+             "Directories to exclude from search")
+            ("mask_include", po::value<std::vector<std::string>>(&options.masks_include)->multitoken(),
+             "Include only files matching these regex patterns")
+            ("mask_exclude", po::value<std::vector<std::string>>(&options.masks_exclude)->multitoken(),
+             "Exclude files matching these regex patterns")
+            ("recursive", po::bool_switch(&options.recursive),
+             "Enable recursive subdirectory scanning")
+            ("case_sensitive", po::bool_switch(&options.case_sensitive),
+             "Make file masks case sensitive")
+        ;
+        
+        po::variables_map var_map;
+        try {
+            po::store(po::parse_command_line(argc, argv, desc), var_map);
+            po::notify(var_map);
+        } catch (const po::error& error) {
+            throw std::runtime_error("Error parsing command-line arguments: " + std::string(error.what()) + 
+                                   "\nUse --help for usage information.");
         }
-        po::notify(var_map);
+        
+        // Check if help was requested
+        if (var_map.count("help")) {
+            print_help(desc);
+            options.show_help = true;
+        }
+        
+        return options;
     }
     catch (const po::error& error)
     {
