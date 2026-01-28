@@ -4,8 +4,6 @@
 #include <algorithm>
 #include <fstream>
 
-#define UNUSED(variable) (void)variable
-
 namespace fs = std::filesystem;
 using FilesList = my::MaskFilesystemTraverser::FilesList;
 
@@ -93,7 +91,6 @@ void MaskFilesystemTraverser::add_root_directory(const fs::path& root_directory)
                 it = m_root_directories.erase(it);
             else
                 ++it;
-            UNUSED(second);
         }
     }
 

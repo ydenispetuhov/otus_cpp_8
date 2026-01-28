@@ -35,17 +35,11 @@ public:
      */
     DuplicateFinder(std::size_t block_size);
 
-    DuplicateFinder() = delete;
-    DuplicateFinder(const DuplicateFinder&) = delete;
-    DuplicateFinder& operator=(const DuplicateFinder&) = delete;
-    DuplicateFinder(DuplicateFinder&&) = delete;
-    DuplicateFinder& operator=(DuplicateFinder&&) = delete;
-
     /**
      * @brief Add filesystem traverser to search files for comparison
      * @param filesystem_traverser[in] Pointer to filesystem traverser
      */
-    void add_filesystem_traverser(const IFilesystemTraverser* filesystem_traverser);
+    void add_filesystem_traverser(const IFilesystemTraverser& filesystem_traverser);
 
     /**
      * @brief Find duplicates in files from traversers' search
@@ -84,10 +78,10 @@ DuplicateFinder<Hash>::DuplicateFinder(std::size_t block_size)
 }
 
 template <typename Hash>
-void DuplicateFinder<Hash>::add_filesystem_traverser(const IFilesystemTraverser* filesystem_traverser)
+void DuplicateFinder<Hash>::add_filesystem_traverser(const IFilesystemTraverser& filesystem_traverser)
 {
-    m_filesystem_traversers.emplace_back(filesystem_traverser);
-    for (Path& path : filesystem_traverser->get_files_list())
+    m_filesystem_traversers.emplace_back(&filesystem_traverser);
+    for (Path& path : filesystem_traverser.get_files_list())
         m_files.emplace(std::move(path), File());
 }
 

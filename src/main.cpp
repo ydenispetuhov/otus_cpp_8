@@ -15,7 +15,7 @@
 namespace fs = std::filesystem;
 
 template <typename Hash>
-void job(std::size_t block_size, my::IFilesystemTraverser* filesystem_traverser)
+void job(std::size_t block_size, my::IFilesystemTraverser& filesystem_traverser)
 {
     my::DuplicateFinder<Hash> duplicate_finder(block_size);
     duplicate_finder.add_filesystem_traverser(filesystem_traverser);
@@ -109,9 +109,9 @@ int main(int argc, char* argv[]) try
     std::string hash_algo = var_map["hash"].as<std::string>();
 
     if (hash_algo == "crc32")
-        job<my::Crc32>(block_size, &filesystem_traverser);
+        job<my::Crc32>(block_size, filesystem_traverser);
     else if (hash_algo == "crc16")
-        job<my::Crc16>(block_size, &filesystem_traverser);
+        job<my::Crc16>(block_size, filesystem_traverser);
     else
         throw std::invalid_argument(std::string("Incorrect hash algorithm ") + hash_algo + ". Use --help options for more details");
 
