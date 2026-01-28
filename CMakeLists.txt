@@ -18,6 +18,7 @@ endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     # code for Linux goes here
+    find_package(Boost 1.89.0 REQUIRED)
 endif()
 
 
